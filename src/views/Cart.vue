@@ -1,6 +1,6 @@
 <script setup>
-import { reactive, onMounted } from "vue";
-import { getItems } from "@/services/itemService";
+import { reactive, onMounted, computed } from "vue";
+import { removeCart, removeItem, getItems } from "@/services/cartService";
 
 const state = reactive({
   items: [],
@@ -13,11 +13,31 @@ const load = async () => {
   }
 };
 
-const remove = async (itemId) => {};
+const remove = async (cartId) => {
+  const res = await removeItem(cartId);
+  if (res === undefined || res.status !== 200) {
+    return;
+  }
+  state.items = state.items.filter((item) => item.id !== cartId);
+  // load();
+  // 다시 리로딩
+  // or
+  // 방금 삭제한 객체만 state.items에서 삭제한다.
+};
 
 onMounted(() => {
   load();
 });
+
+const clear = async () => {
+  if (confirm("장바구니를 비우시겠습니까?")) {
+    const res = await removeCart();
+    if (res.status !== 200) {
+      return;
+    }
+    state.items = [];
+  }
+};
 </script>
 
 <template>
@@ -38,7 +58,8 @@ onMounted(() => {
             >
           </li>
         </ul>
-        <div class="act">
+        <div class="act d-flex justify-between">
+          <button @click="clear" class="btn btn-danger">장바구니 비우기</button>
           <router-link to="/order" class="btn btn-primary"
             >주문하기</router-link
           >
